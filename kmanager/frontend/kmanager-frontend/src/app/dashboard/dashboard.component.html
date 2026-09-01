@@ -1,0 +1,548 @@
+<div class="k-dashboard-layout">
+
+  <!-- Background Decorative & Animated Layer (Mismo fondo visual que Login) -->
+  <div class="k-bg-grid"></div>
+  <div class="k-bg-beam"></div>
+  
+  <div class="k-orb k-orb-1"></div>
+  <div class="k-orb k-orb-2"></div>
+  <div class="k-orb k-orb-3"></div>
+
+  <!-- Lava Lamp Floating Bubbles -->
+  <div class="k-lava-container">
+    <div class="k-lava-bubble k-bubble-1"></div>
+    <div class="k-lava-bubble k-bubble-2"></div>
+    <div class="k-lava-bubble k-bubble-3"></div>
+    <div class="k-lava-bubble k-bubble-4"></div>
+    <div class="k-lava-bubble k-bubble-5"></div>
+    <div class="k-lava-bubble k-bubble-6"></div>
+    <div class="k-lava-bubble k-bubble-7"></div>
+  </div>
+
+  <div class="k-bg-ring k-ring-1"></div>
+  <div class="k-bg-ring k-ring-2"></div>
+
+  <!-- Mobile Header -->
+  <header class="k-mobile-header">
+    <div class="k-mobile-brand">
+      <div class="k-logo-badge">
+        <img
+          alt="K-Manager Logo"
+          class="k-logo-img"
+          src="/assets/logo-kmanager.png"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'">
+        <span style="display:none; color:#0f172a; font-weight:800; font-size:12px;">K-Manager</span>
+      </div>
+      <span style="font-weight:700; font-size:14px; color:#ffffff;">K-Manager</span>
+    </div>
+
+    <button
+      type="button"
+      (click)="toggleMobileMenu()"
+      class="k-mobile-menu-btn"
+      aria-label="Abrir menú">
+      <span class="material-symbols-outlined">{{ mobileMenuOpen() ? 'close' : 'menu' }}</span>
+    </button>
+  </header>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div
+    *ngIf="mobileMenuOpen()"
+    (click)="closeMobileMenu()"
+    style="position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:45;">
+  </div>
+
+  <!-- Sidebar -->
+  <nav class="k-sidebar" [class.k-sidebar-open]="mobileMenuOpen()">
+    
+    <!-- Brand Logo -->
+    <div class="k-sidebar-header">
+      <img
+        src="/assets/logo-kmanager.png"
+        alt="K-Manager — Control de Gastos"
+        class="k-sidebar-logo-full"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+      >
+      <!-- Fallback si no carga la imagen -->
+      <div class="k-sidebar-logo-fallback-text" style="display:none;">
+        <div class="k-sidebar-logo-icon">K</div>
+        <div>
+          <span class="k-sidebar-brand-name">K-Manager</span>
+          <span class="k-sidebar-brand-tagline">Control de Gastos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="k-sidebar-nav">
+      <!-- Dashboard (Active) -->
+      <a [routerLink]="['/dashboard']" class="k-nav-item k-nav-active">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- Ingresos -->
+      <a [routerLink]="['/ingresos']" class="k-nav-item">
+        <span class="material-symbols-outlined">payments</span>
+        <span>Ingresos</span>
+      </a>
+
+      <!-- Egresos -->
+      <a (click)="onFeatureClick('Egresos')" class="k-nav-item">
+        <span class="material-symbols-outlined">shopping_cart</span>
+        <span>Egresos</span>
+      </a>
+
+      <!-- Historial -->
+      <a (click)="onFeatureClick('Historial')" class="k-nav-item">
+        <span class="material-symbols-outlined">history</span>
+        <span>Historial</span>
+      </a>
+    </div>
+
+    <!-- CTA & Logout -->
+    <div class="k-sidebar-footer">
+      <button
+        type="button"
+        (click)="openNewOperationModal()"
+        class="k-btn-new-op">
+        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+        Nueva Operación
+      </button>
+
+      <button
+        type="button"
+        (click)="onLogout()"
+        class="k-btn-logout">
+        <span class="material-symbols-outlined" style="font-size:18px;">logout</span>
+        Cerrar Sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Workspace -->
+  <main class="k-workspace">
+    
+    <!-- Top Header -->
+    <header class="k-workspace-header">
+      <div>
+        <h1 class="k-header-title">Resumen Financiero</h1>
+        <p class="k-header-subtitle">Monitoreo en tiempo real de ingresos y egresos.</p>
+      </div>
+
+      <div class="k-user-badge">
+        <div class="k-user-avatar">
+          {{ (user()?.username ?? 'U')[0].toUpperCase() }}
+        </div>
+        <div>
+          <p style="font-size:11px; color:#94a3b8; margin:0;">Usuario activo</p>
+          <p style="font-size:13px; font-weight:700; color:#ffffff; margin:0; text-transform:capitalize;">{{ user()?.username ?? 'Usuario' }}</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="k-grid">
+      
+      <!-- Total de Ingresos Card -->
+      <section class="k-col-8 k-income-card">
+        <div class="k-card-bg-pattern"></div>
+        <svg class="k-card-bg-shape" fill="currentColor" viewBox="0 0 100 100">
+          <path d="M0 100 L100 0 L100 100 Z"></path>
+        </svg>
+
+        <div style="position:relative; z-index:10; display:flex; flex-direction:column; justify-content:center; height:100%; gap:1rem;">
+          <div class="k-income-header">
+            <div>
+              <div class="k-card-role-pill">
+                <span class="material-symbols-outlined" style="font-size:14px;">credit_card</span>
+                <span>{{ cardRoleTitle }}</span>
+              </div>
+              <p class="k-income-label">Total de Ingresos</p>
+              <h2 class="k-income-amount">{{ totalIngresos() }}</h2>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Meta de Ahorro Card -->
+      <section class="k-col-4 k-glass-panel k-saving-card">
+        <p class="k-panel-title" style="width:100%; text-align:left;">Meta de Ahorro</p>
+        
+        <div class="k-circular-chart-box">
+          <svg class="k-circular-chart" viewBox="0 0 36 36">
+            <path class="k-circle-bg" d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+            <path
+              class="k-circle"
+              d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+              [attr.stroke-dasharray]="porcentajeAhorro() + ', 100'"></path>
+          </svg>
+          <div class="k-chart-percent">{{ porcentajeAhorro() }}%</div>
+        </div>
+
+        <div class="k-saving-info">
+          <p class="k-saving-subtext">Ahorrado este mes</p>
+          <p class="k-saving-value">{{ ahorradoMes() }}</p>
+        </div>
+      </section>
+
+      <!-- Acceso Rápido (Egresos) -->
+      <section class="k-col-4 k-glass-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <p class="k-panel-title">Acceso Rápido (Egresos)</p>
+        </div>
+
+        <div class="k-quick-grid">
+          <button
+            *ngFor="let item of quickExpenses()"
+            type="button"
+            (click)="onQuickExpenseItemClick(item)"
+            class="k-quick-btn"
+            [title]="item.defaultAmount > 0 ? (item.title + ' - Q' + item.defaultAmount) : item.title">
+            <div class="k-quick-icon-circle" [style.background]="getQuickIconBg(item.color)" [style.color]="getQuickIconColor(item.color)">
+              <span class="material-symbols-outlined" style="font-size:20px;">{{ item.icon }}</span>
+            </div>
+            <span>{{ item.title }}</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="openNewQuickExpenseModal()"
+            class="k-quick-btn k-quick-btn-add"
+            title="Crear Nuevo Egreso Fijo">
+            <span class="material-symbols-outlined" style="font-size:22px;">add</span>
+            <span>Añadir</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Historial Mensual (Conforme a Imagen 2) -->
+      <section class="k-col-8 k-glass-panel k-history-panel">
+        <div class="k-history-header">
+          <p class="k-panel-title">Historial Mensual</p>
+          <button type="button" (click)="onFeatureClick('Historial')" class="k-btn-link">
+            <span>Ver todo</span>
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+          </button>
+        </div>
+
+        <div class="k-table-container">
+          <table class="k-table">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th style="text-align:right;">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of monthlyHistory()">
+                <td>
+                  <div class="k-category-cell">
+                    <div class="k-category-icon-box" [ngClass]="item.iconBg">
+                      <span class="material-symbols-outlined" style="font-size:18px;">{{ item.icon }}</span>
+                    </div>
+                    <div>
+                      <p class="k-table-title">{{ item.title }}</p>
+                      <p class="k-table-subtitle">{{ item.subtitle }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="k-table-date">{{ item.date }}</td>
+
+                <td>
+                  <span class="k-status-badge" [ngClass]="item.statusClass">
+                    {{ item.status }}
+                  </span>
+                </td>
+
+                <td style="text-align:right;">
+                  <span class="k-table-amount" [class.k-amount-positive]="item.isPositive" [class.k-amount-negative]="!item.isPositive">
+                    {{ item.amount }}
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="monthlyHistory().length === 0">
+                <td colspan="4" style="text-align:center; padding:2.5rem; color:#94a3b8;">
+                  No hay transacciones registradas en PostgreSQL todavía.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Nueva Operación (Conectado a PostgreSQL con Categorías) -->
+  <div *ngIf="showNewOperationModal()" class="k-modal-backdrop">
+    <div class="k-modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; align-items:center; gap:0.5rem; color:#10b981;">
+          <span class="material-symbols-outlined">add_circle</span>
+          <h3 style="font-size:1.125rem; font-weight:700; color:#ffffff; margin:0;">Nueva Operación</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closeNewOperationModal()"
+          style="background:none; border:none; color:#94a3b8; cursor:pointer;">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveOperation()">
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem;">
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.5rem;">Tipo de Transacción</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <button
+                type="button"
+                (click)="setOpType('income')"
+                [style.border-color]="opType() === 'income' ? '#10b981' : 'rgba(255,255,255,0.1)'"
+                [style.background]="opType() === 'income' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="opType() === 'income' ? '#10b981' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">payments</span>
+                Ingreso
+              </button>
+              <button
+                type="button"
+                (click)="setOpType('expense')"
+                [style.border-color]="opType() === 'expense' ? '#f43f5e' : 'rgba(255,255,255,0.1)'"
+                [style.background]="opType() === 'expense' ? 'rgba(244,63,94,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="opType() === 'expense' ? '#fb7185' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">shopping_cart</span>
+                Egreso
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Descripción *</label>
+            <input
+              type="text"
+              name="opTitle"
+              [ngModel]="opTitle()"
+              (ngModelChange)="opTitle.set($event)"
+              placeholder="Ej: Nómina quincenal, Supermercado, Alquiler..."
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Categoría en PostgreSQL</label>
+            <select
+              name="opCategoryId"
+              [ngModel]="opCategoryId()"
+              (ngModelChange)="onCategorySelected($event)"
+              style="width:100%; background:#132238; border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; cursor:pointer;">
+              <option [ngValue]="null" style="background:#0f172a; color:#94a3b8;">-- Seleccionar Categoría --</option>
+              <option *ngFor="let cat of filteredCategories" [ngValue]="cat.id" style="background:#0f172a; color:#ffffff;">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Subtítulo / Detalle (Opcional)</label>
+            <input
+              type="text"
+              name="opSubtitle"
+              [ngModel]="opSubtitle()"
+              (ngModelChange)="opSubtitle.set($event)"
+              placeholder="Ej: Alimentación, Vivienda, Ingreso Extra..."
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Monto (GTQ) *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="opAmount"
+              [ngModel]="opAmount()"
+              (ngModelChange)="opAmount.set($event)"
+              placeholder="0.00"
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Fecha de la Operación</label>
+            <input
+              type="date"
+              name="opDate"
+              [ngModel]="opDate()"
+              (ngModelChange)="opDate.set($event)"
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; color-scheme:dark;" />
+          </div>
+
+          <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); padding:0.75rem; border-radius:0.6rem; font-size:12px; color:#10b981; display:flex; align-items:center; gap:0.5rem;">
+            <span class="material-symbols-outlined" style="font-size:18px;">database</span>
+            <span>Esta operación se vinculará con category_id en PostgreSQL.</span>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+          <button
+            type="button"
+            (click)="closeNewOperationModal()"
+            style="padding:0.5rem 1rem; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer;">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmitting()"
+            style="padding:0.5rem 1.25rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#006c49,#10b981); color:#ffffff; font-weight:700; font-size:13px; cursor:pointer;">
+            {{ isSubmitting() ? 'Guardando...' : 'Guardar Operación' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Nuevo Egreso Fijo (Acceso Rápido conectado a PostgreSQL) -->
+  <div *ngIf="showNewQuickExpenseModal()" class="k-modal-backdrop">
+    <div class="k-modal-box" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; align-items:center; gap:0.5rem; color:#10b981;">
+          <span class="material-symbols-outlined">bookmark_add</span>
+          <h3 style="font-size:1.125rem; font-weight:700; color:#ffffff; margin:0;">Nuevo Egreso Fijo</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closeNewQuickExpenseModal()"
+          style="background:none; border:none; color:#94a3b8; cursor:pointer;">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveQuickExpense()">
+        <div style="display:flex; flex-direction:column; gap:1.1rem; margin-bottom:1.5rem;">
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Nombre / Título del Egreso Fijo *</label>
+            <input
+              type="text"
+              name="quickTitle"
+              [ngModel]="quickTitle()"
+              (ngModelChange)="quickTitle.set($event)"
+              placeholder="Ej: Gimnasio, Gasolina, Seguro Médico, Streaming..."
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Categoría Asociada</label>
+            <select
+              name="quickCategoryId"
+              [ngModel]="quickCategoryId()"
+              (ngModelChange)="quickCategoryId.set($event)"
+              style="width:100%; background:#132238; border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; cursor:pointer;">
+              <option [ngValue]="null" style="background:#0f172a; color:#94a3b8;">-- Seleccionar Categoría (Opcional) --</option>
+              <option *ngFor="let cat of categories()" [ngValue]="cat.id" style="background:#0f172a; color:#ffffff;">
+                {{ cat.name }} ({{ cat.type === 'income' ? 'Ingreso' : 'Egreso' }})
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.45rem;">Seleccionar Ícono</label>
+            <div class="k-icon-picker-grid">
+              <button
+                *ngFor="let item of availableIcons"
+                type="button"
+                (click)="setQuickIcon(item.icon)"
+                [class.k-icon-chip-active]="quickIcon() === item.icon"
+                class="k-icon-chip"
+                [title]="item.label">
+                <span class="material-symbols-outlined" style="font-size:18px;">{{ item.icon }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.45rem;">Color del Ícono</label>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+              <button
+                *ngFor="let c of availableColors"
+                type="button"
+                (click)="setQuickColor(c.name)"
+                [style.background-color]="c.hex"
+                [style.outline]="quickColor() === c.name ? '2px solid #ffffff' : 'none'"
+                [style.outline-offset]="'2px'"
+                style="width:28px; height:28px; border-radius:50%; border:none; cursor:pointer; transition:transform 0.15s;"
+                [title]="c.label">
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Monto Predeterminado (GTQ, Opcional)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              name="quickAmount"
+              [ngModel]="quickAmount()"
+              (ngModelChange)="quickAmount.set($event)"
+              placeholder="0.00"
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); padding:0.75rem; border-radius:0.6rem; font-size:12px; color:#10b981; display:flex; align-items:center; gap:0.5rem;">
+            <span class="material-symbols-outlined" style="font-size:18px;">database</span>
+            <span>Este egreso fijo se guardará en PostgreSQL y aparecerá en tu acceso rápido.</span>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+          <button
+            type="button"
+            (click)="closeNewQuickExpenseModal()"
+            style="padding:0.5rem 1rem; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer;">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmittingQuick()"
+            style="padding:0.5rem 1.25rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#006c49,#10b981); color:#ffffff; font-weight:700; font-size:13px; cursor:pointer;">
+            {{ isSubmittingQuick() ? 'Guardando...' : 'Guardar Egreso Fijo' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Alert -->
+  <div *ngIf="toastMessage()" class="k-toast">
+    <span class="material-symbols-outlined" style="color:#10b981;">info</span>
+    <span>{{ toastMessage() }}</span>
+  </div>
+
+  <!-- Session Expired Modal Overlay -->
+  <div *ngIf="sessionExpired()" class="k-modal-backdrop">
+    <div class="k-modal-box" style="text-align:center; max-width:380px;">
+      <div style="width:54px; height:54px; border-radius:50%; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem auto;">
+        <span class="material-symbols-outlined" style="font-size:28px;">warning</span>
+      </div>
+      <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin:0 0 0.5rem 0;">Sesión Expirada</h3>
+      <p style="font-size:13px; color:#94a3b8; margin:0 0 1.5rem 0;">Tu token de sesión ha expirado. Inicia sesión nuevamente para continuar.</p>
+      <button
+        type="button"
+        (click)="onLogout()"
+        style="width:100%; padding:0.75rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#006c49,#10b981); color:#ffffff; font-weight:700; font-size:14px; cursor:pointer;">
+        Iniciar Sesión
+      </button>
+    </div>
+  </div>
+
+</div>

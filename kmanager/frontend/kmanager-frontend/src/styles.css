@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@source "./app/**/*.{html,ts}";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, sans-serif;
+  --color-deep-navy: #091426;
+  --color-secondary: #006c49;
+  --color-growth-emerald: #10b981;
+  --color-surface: #fbf8fa;
+  --color-outline-variant: #c5c6cd;
+  --color-border-subtle: #e2e8f0;
+}
