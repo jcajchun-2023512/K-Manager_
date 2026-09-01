@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe((params: Params) => {
       if (params['expired'] === 'true') {
-        this.errorMessage.set('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+        this.errorMessage.set('Su sesión ha expirado. Por favor, inicia sesión de nuevo.');
       }
     });
   }
