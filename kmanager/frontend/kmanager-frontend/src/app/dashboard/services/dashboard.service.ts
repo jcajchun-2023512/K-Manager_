@@ -44,4 +44,3 @@ export class DashboardService {
     return this.http.delete(`${this.apiUrl}/dashboard/transactions/${id}`);
   }
 }
-

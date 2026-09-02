@@ -483,4 +483,3 @@ export class IngresosComponent implements OnInit, OnDestroy {
     return amount.startsWith('+') ? amount.substring(1) : amount;
   }
 }
-

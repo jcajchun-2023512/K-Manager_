@@ -5,7 +5,6 @@ export interface Category {
   icon: string;
   color: string;
 }
-
 export interface QuickExpense {
   id: number;
   userId?: number;
@@ -15,7 +14,6 @@ export interface QuickExpense {
   color: string;
   defaultAmount: number;
 }
-
 export interface CreateQuickExpenseDto {
   title: string;
   categoryId?: number;
@@ -23,7 +21,6 @@ export interface CreateQuickExpenseDto {
   color?: string;
   defaultAmount?: number;
 }
-
 export interface MonthlyHistoryItem {
   id: string;
   title: string;
@@ -37,7 +34,6 @@ export interface MonthlyHistoryItem {
   iconBg: string;
   categoryId?: number;
 }
-
 export interface DashboardSummary {
   totalIngresos: string;
   totalEgresos: string;
@@ -47,7 +43,6 @@ export interface DashboardSummary {
   quickExpenses: QuickExpense[];
   monthlyHistory: MonthlyHistoryItem[];
 }
-
 export interface CreateTransactionDto {
   title: string;
   subtitle?: string;
@@ -57,7 +52,6 @@ export interface CreateTransactionDto {
   transactionDate?: string;
   categoryId?: number;
 }
-
 export interface UpdateTransactionDto {
   title?: string;
   subtitle?: string;

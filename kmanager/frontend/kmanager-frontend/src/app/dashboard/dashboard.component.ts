@@ -498,7 +498,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isDeleting.set(false);
-        this.showToast(err?.error?.message ?? 'Error al eliminar la operación en PostgreSQL.', 'error');
+        this.showToast(err?.error?.message ?? 'Error al eliminar la operación dentro de PostgreSQL.', 'error');
       },
     });
   }
