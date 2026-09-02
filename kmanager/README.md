@@ -1,7 +1,7 @@
 # 💼 K-Manager — Enterprise Financial & Expense Management System
 
 <p align="center">
-  <strong>Plataforma integral de gestión y control de flujos financieros, ingresos, egresos y analítica de tendencias en tiempo real.</strong>
+  <strong>Aplicación integral de gestión y control de flujos financieros, ingresos, egresos y analítica de tendencias en tiempo real.</strong>
 </p>
 
 <p align="center">
