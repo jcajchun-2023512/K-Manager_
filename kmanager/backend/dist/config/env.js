@@ -12,7 +12,7 @@ exports.env = {
     nodeEnv: process.env.NODE_ENV || 'development',
     jwt: {
         secret: process.env.JWT_SECRET || 'dev-secret-change-me',
-        expiresIn: process.env.JWT_EXPIRES_IN || '15',
+        expiresIn: process.env.JWT_EXPIRES_IN || '3h',
         refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me',
         refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     },

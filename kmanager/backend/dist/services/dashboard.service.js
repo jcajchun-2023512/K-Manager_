@@ -84,6 +84,16 @@ class DashboardService {
         }
         return transaction_repository_1.transactionRepository.create(userId, dto);
     }
+    async updateTransaction(userId, id, dto) {
+        if (dto.amount !== undefined && dto.amount <= 0) {
+            throw new Error('El monto debe ser un valor positivo mayor a 0');
+        }
+        const updated = await transaction_repository_1.transactionRepository.update(id, userId, dto);
+        if (!updated) {
+            throw new Error('Transacción no encontrada o sin permisos para editarla');
+        }
+        return updated;
+    }
     async deleteTransaction(userId, id) {
         return transaction_repository_1.transactionRepository.delete(id, userId);
     }

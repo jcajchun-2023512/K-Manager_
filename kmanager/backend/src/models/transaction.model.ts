@@ -74,3 +74,13 @@ export interface CreateTransactionDto {
   categoryId?: number;
 }
 
+export interface UpdateTransactionDto {
+  title?: string;
+  subtitle?: string;
+  amount?: number;
+  type?: 'income' | 'expense';
+  status?: 'Completado' | 'Pendiente' | 'Cancelado';
+  transactionDate?: string;
+  categoryId?: number | null;
+}
+

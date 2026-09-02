@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   DashboardSummary,
   CreateTransactionDto,
+  UpdateTransactionDto,
   Category,
   QuickExpense,
   CreateQuickExpenseDto,
@@ -35,8 +36,11 @@ export class DashboardService {
     return this.http.post(`${this.apiUrl}/dashboard/transactions`, dto);
   }
 
+  updateTransaction(id: string | number, dto: UpdateTransactionDto): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/dashboard/transactions/${id}`, dto);
+  }
+
   deleteTransaction(id: string | number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/dashboard/transactions/${id}`);
   }
 }
-

@@ -1,11 +1,12 @@
 import { pool } from '@config/database';
-import { Transaction, CreateTransactionDto, Category, QuickExpense, CreateQuickExpenseDto } from '@models/transaction.model';
+import { Transaction, CreateTransactionDto, UpdateTransactionDto, Category, QuickExpense, CreateQuickExpenseDto } from '@models/transaction.model';
 
 export interface ITransactionRepository {
   findByUserId(userId: number, limit?: number): Promise<Transaction[]>;
   getTotalsByUserId(userId: number): Promise<{ totalIncome: number; totalExpense: number }>;
   getSavingGoalByUserId(userId: number): Promise<{ targetAmount: number; currentAmount: number } | null>;
   create(userId: number, dto: CreateTransactionDto): Promise<Transaction>;
+  update(id: number, userId: number, dto: UpdateTransactionDto): Promise<Transaction | null>;
   delete(id: number, userId: number): Promise<boolean>;
   getCategories(): Promise<Category[]>;
   getQuickExpensesByUserId(userId: number): Promise<QuickExpense[]>;
@@ -152,6 +153,72 @@ export class PostgresTransactionRepository implements ITransactionRepository {
     const r = res.rows[0];
 
     // Obtener datos de la categoría asignada
+    let categoryName: string | undefined;
+    let categoryIcon: string | undefined;
+    let categoryColor: string | undefined;
+
+    if (r.categoryId) {
+      const catRes = await pool.query(`SELECT name, icon, color FROM categories WHERE id = $1`, [r.categoryId]);
+      if (catRes.rows.length > 0) {
+        categoryName = catRes.rows[0].name;
+        categoryIcon = catRes.rows[0].icon;
+        categoryColor = catRes.rows[0].color;
+      }
+    }
+
+    return {
+      id: r.id,
+      userId: r.userId,
+      categoryId: r.categoryId,
+      title: r.title,
+      subtitle: r.subtitle,
+      amount: parseFloat(r.amount),
+      type: r.type,
+      status: r.status,
+      transactionDate: formatDisplayDate(r.rawTransactionDate),
+      createdAt: r.createdAt,
+      categoryName,
+      categoryIcon,
+      categoryColor,
+    };
+  }
+
+  async update(id: number, userId: number, dto: UpdateTransactionDto): Promise<Transaction | null> {
+    // Construir SET dinámico con solo los campos enviados
+    const setClauses: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+
+    if (dto.title !== undefined)   { setClauses.push(`title = $${idx++}`);             values.push(dto.title); }
+    if (dto.subtitle !== undefined) { setClauses.push(`subtitle = $${idx++}`);          values.push(dto.subtitle); }
+    if (dto.amount !== undefined)   { setClauses.push(`amount = $${idx++}`);             values.push(dto.amount); }
+    if (dto.type !== undefined)     { setClauses.push(`type = $${idx++}`);               values.push(dto.type); }
+    if (dto.status !== undefined)   { setClauses.push(`status = $${idx++}`);             values.push(dto.status); }
+    if (dto.transactionDate !== undefined) {
+      setClauses.push(`transaction_date = $${idx++}::date`);
+      values.push(dto.transactionDate);
+    }
+    if ('categoryId' in dto) {
+      setClauses.push(`category_id = $${idx++}`);
+      values.push(dto.categoryId ?? null);
+    }
+
+    if (setClauses.length === 0) return null;
+
+    values.push(id, userId);
+    const res = await pool.query(
+      `UPDATE transactions
+       SET ${setClauses.join(', ')}
+       WHERE id = $${idx} AND user_id = $${idx + 1}
+       RETURNING id, user_id AS "userId", category_id AS "categoryId", title, subtitle,
+                 amount, type, status, TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "rawTransactionDate",
+                 created_at AS "createdAt"`,
+      values
+    );
+
+    if (res.rowCount === 0) return null;
+    const r = res.rows[0];
+
     let categoryName: string | undefined;
     let categoryIcon: string | undefined;
     let categoryColor: string | undefined;

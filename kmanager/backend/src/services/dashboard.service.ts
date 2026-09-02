@@ -3,6 +3,7 @@ import {
   DashboardSummary,
   Transaction,
   CreateTransactionDto,
+  UpdateTransactionDto,
   Category,
   QuickExpense,
   CreateQuickExpenseDto,
@@ -102,6 +103,17 @@ export class DashboardService {
       throw new Error('El monto debe ser un valor positivo mayor a 0');
     }
     return transactionRepository.create(userId, dto);
+  }
+
+  async updateTransaction(userId: number, id: number, dto: UpdateTransactionDto): Promise<Transaction> {
+    if (dto.amount !== undefined && dto.amount <= 0) {
+      throw new Error('El monto debe ser un valor positivo mayor a 0');
+    }
+    const updated = await transactionRepository.update(id, userId, dto);
+    if (!updated) {
+      throw new Error('Transacción no encontrada o sin permisos para editarla');
+    }
+    return updated;
   }
 
   async deleteTransaction(userId: number, id: number): Promise<boolean> {
