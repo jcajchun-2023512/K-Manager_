@@ -106,6 +106,39 @@ export class DashboardController {
     }
   }
 
+  async updateTransaction(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      const userId = parseInt(req.user?.sub || '0', 10);
+      if (!userId) {
+        return res.status(401).json({ message: 'Usuario no autenticado' });
+      }
+
+      const id = parseInt(String(req.params.id), 10);
+      if (!id) {
+        return res.status(400).json({ message: 'ID de transacción inválido' });
+      }
+
+      const { title, subtitle, amount, type, status, transactionDate, categoryId } = req.body || {};
+
+      const dto: Record<string, any> = {};
+      if (title !== undefined)           dto['title']           = title;
+      if (subtitle !== undefined)        dto['subtitle']        = subtitle;
+      if (amount !== undefined)          dto['amount']          = parseFloat(amount);
+      if (type !== undefined)            dto['type']            = type;
+      if (status !== undefined)          dto['status']          = status;
+      if (transactionDate !== undefined) dto['transactionDate'] = transactionDate;
+      if ('categoryId' in (req.body || {})) {
+        dto['categoryId'] = categoryId ? parseInt(String(categoryId), 10) : null;
+      }
+
+      const updated = await dashboardService.updateTransaction(userId, id, dto);
+      return res.status(200).json(updated);
+    } catch (error: any) {
+      console.error('[DashboardController.updateTransaction] Error:', error);
+      return res.status(400).json({ message: error.message || 'Error al actualizar transacción' });
+    }
+  }
+
   async deleteTransaction(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {
       const userId = parseInt(req.user?.sub || '0', 10);
