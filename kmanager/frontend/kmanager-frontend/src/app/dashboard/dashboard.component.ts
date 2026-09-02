@@ -11,6 +11,7 @@ import {
   MonthlyHistoryItem,
   Category,
   QuickExpense,
+  UpdateTransactionDto,
 } from './models/dashboard.model';
 
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -72,10 +73,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly showNewOperationModal = signal<boolean>(false);
   readonly showNewQuickExpenseModal = signal<boolean>(false);
   readonly toastMessage = signal<string | null>(null);
+  readonly toastType = signal<'success' | 'error' | 'info'>('info');
   readonly mobileMenuOpen = signal<boolean>(false);
   readonly sessionExpired = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
   readonly isSubmittingQuick = signal<boolean>(false);
+
+  // --- EDICIÓN ---
+  readonly showEditModal = signal<boolean>(false);
+  readonly editingItem = signal<MonthlyHistoryItem | null>(null);
+  readonly isEditSubmitting = signal<boolean>(false);
+
+  // --- CONFIRMACIÓN DE ELIMINACIÓN ---
+  readonly showDeleteConfirmModal = signal<boolean>(false);
+  readonly deletingItem = signal<MonthlyHistoryItem | null>(null);
+  readonly isDeleting = signal<boolean>(false);
 
   // Form Signals for New Operation
   readonly opTitle = signal<string>('');
@@ -84,6 +96,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly opSubtitle = signal<string>('');
   readonly opCategoryId = signal<number | null>(null);
   readonly opDate = signal<string>(getTodayLocalDateString());
+
+  // Form Signals for Edit Operation
+  readonly editId = signal<string | number | null>(null);
+  readonly editTitle = signal<string>('');
+  readonly editAmount = signal<number | null>(null);
+  readonly editType = signal<'income' | 'expense'>('income');
+  readonly editSubtitle = signal<string>('');
+  readonly editCategoryId = signal<number | null>(null);
+  readonly editDate = signal<string>(getTodayLocalDateString());
+  readonly editStatus = signal<'Completado' | 'Pendiente' | 'Cancelado'>('Completado');
 
   // Form Signals for New Quick / Fixed Expense
   readonly quickTitle = signal<string>('');
@@ -354,18 +376,146 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  // --- GESTIÓN DE EDICIÓN DE OPERACIÓN ---
+  openEditModal(item: MonthlyHistoryItem): void {
+    this.editingItem.set(item);
+    this.editId.set(item.id);
+    this.editTitle.set(item.title);
+    this.editSubtitle.set(item.subtitle);
+    this.editType.set(item.isPositive ? 'income' : 'expense');
+    this.editCategoryId.set(item.categoryId || null);
+    this.editStatus.set((item.status as any) || 'Completado');
+
+    // Extraer monto numérico
+    const cleanedAmount = item.amount.replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleanedAmount);
+    this.editAmount.set(isNaN(num) ? null : num);
+
+    this.editDate.set(getTodayLocalDateString());
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+    this.editingItem.set(null);
+  }
+
+  setEditOpType(type: 'income' | 'expense'): void {
+    this.editType.set(type);
+    this.editCategoryId.set(null);
+  }
+
+  get editFilteredCategories(): Category[] {
+    const currentType = (this.editType() || 'income').toLowerCase();
+    const list = this.categories() || DEFAULT_CATEGORIES;
+    return list.filter((c) => (c.type || '').toLowerCase() === currentType);
+  }
+
+  onEditCategorySelected(catId: number | null): void {
+    this.editCategoryId.set(catId);
+    if (catId) {
+      const cat = this.categories().find((c) => c.id === catId);
+      if (cat && (!this.editSubtitle() || this.editSubtitle() === 'Ingreso Principal' || this.editSubtitle() === 'Gasto General')) {
+        this.editSubtitle.set(cat.name);
+      }
+    }
+  }
+
+  saveEditOperation(): void {
+    const id = this.editId();
+    if (!id) return;
+
+    const title = this.editTitle().trim();
+    const amount = this.editAmount();
+    const type = this.editType();
+    const categoryId = this.editCategoryId() || undefined;
+    const transactionDate = this.editDate() || getTodayLocalDateString();
+    const subtitle =
+      this.editSubtitle().trim() ||
+      (categoryId ? this.categories().find((c) => c.id === categoryId)?.name : '') ||
+      (type === 'income' ? 'Ingreso Principal' : 'Gasto General');
+    const status = this.editStatus();
+
+    if (!title) {
+      this.showToast('Por favor, ingresa una descripción para la operación.', 'error');
+      return;
+    }
+
+    if (!amount || amount <= 0) {
+      this.showToast('Por favor, ingresa un monto válido mayor a 0.', 'error');
+      return;
+    }
+
+    this.isEditSubmitting.set(true);
+    this.dashboardService
+      .updateTransaction(id, {
+        title,
+        subtitle,
+        amount,
+        type,
+        status,
+        categoryId: categoryId || null,
+        transactionDate,
+      })
+      .subscribe({
+        next: () => {
+          this.isEditSubmitting.set(false);
+          this.showEditModal.set(false);
+          this.editingItem.set(null);
+          this.showToast('¡Operación actualizada con éxito en PostgreSQL!', 'success');
+          this.loadDashboardData(); // Recarga en tiempo real
+        },
+        error: (err) => {
+          this.isEditSubmitting.set(false);
+          this.showToast(err?.error?.message ?? 'Error al actualizar la operación en PostgreSQL.', 'error');
+        },
+      });
+  }
+
+  // --- GESTIÓN DE ELIMINACIÓN DE OPERACIÓN ---
+  openDeleteConfirm(item: MonthlyHistoryItem): void {
+    this.deletingItem.set(item);
+    this.showDeleteConfirmModal.set(true);
+  }
+
+  closeDeleteConfirm(): void {
+    this.showDeleteConfirmModal.set(false);
+    this.deletingItem.set(null);
+  }
+
+  confirmDelete(): void {
+    const item = this.deletingItem();
+    if (!item) return;
+
+    this.isDeleting.set(true);
+    this.dashboardService.deleteTransaction(item.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.showDeleteConfirmModal.set(false);
+        this.deletingItem.set(null);
+        this.showToast('¡Operación eliminada de la base de datos con éxito!', 'success');
+        this.loadDashboardData(); // Recarga en tiempo real
+      },
+      error: (err) => {
+        this.isDeleting.set(false);
+        this.showToast(err?.error?.message ?? 'Error al eliminar la operación en PostgreSQL.', 'error');
+      },
+    });
+  }
+
   onFeatureClick(feature: string): void {
     this.showToast(`Módulo de ${feature}: conectado a la base de datos PostgreSQL.`);
     this.closeMobileMenu();
   }
 
-  showToast(message: string): void {
+  showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.toastType.set(type);
     this.toastMessage.set(message);
     setTimeout(() => {
       if (this.toastMessage() === message) {
         this.toastMessage.set(null);
       }
-    }, 4000);
+    }, 4500);
   }
 
   toggleMobileMenu(): void {
