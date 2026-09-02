@@ -1,86 +1,244 @@
-# K-Manager — Sistema de Autenticación y Autorización JWT
+# 💼 K-Manager — Enterprise Financial & Expense Management System
 
-K-Manager es una solución robusta y moderna diseñada bajo principios de arquitectura limpia (*Clean Architecture*) y separación de responsabilidades, implementando un sistema completo de autenticación y autorización basado en JSON Web Tokens (JWT). El sistema consta de un **Backend en Node.js con Express y TypeScript** y un **Frontend en Angular** con componentes independientes (*standalone*), interceptores HTTP y control de acceso basado en roles (*RBAC*).
+<p align="center">
+  <strong>Plataforma integral de gestión y control de flujos financieros, ingresos, egresos y analítica de tendencias en tiempo real.</strong>
+</p>
 
----
-
-## 1. Arquitectura y Diseño del Sistema
-
-La aplicación está diseñada para ser escalable, mantenible y desacoplada tanto en el servidor como en el cliente.
-
-### A. Backend (Node.js / Express / TypeScript)
-El servidor sigue una arquitectura en capas estrictamente separadas:
-- **`config/`**: Configuración centralizada de variables de entorno (`env.ts`) y conexiones (`database.ts`).
-- **`models/`**: Definiciones de entidades de dominio e interfaces de datos (ej. `user.model.ts`).
-- **`repositories/`**: Capa de abstracción de datos mediante el patrón Repositorio (`user.repository.ts`). Actualmente implementa un repositorio en memoria para desarrollo rápido y pruebas, desacoplando la lógica de negocio de la persistencia física.
-- **`services/`**: Lógica de negocio pura (`auth.service.ts`), encargada de la autenticación, generación de tokens y validación de credenciales.
-- **`controllers/`**: Manejadores de peticiones HTTP (`auth.controller.ts`), conectan las rutas con los servicios y gestionan los códigos de estado HTTP.
-- **`middlewares/`**: Funciones transversales de seguridad (`auth.middleware.ts`), incluyendo autenticación por token Bearer y autorización por roles requeridos (`requireRole`).
-- **`routes/`**: Definición de endpoints de la API REST (`auth.routes.ts`).
-- **`utils/`**: Utilidades criptográficas y de gestión de tokens JWT (`jwt.util.ts`).
-
-### B. Frontend (Angular / TypeScript)
-El cliente está desarrollado utilizando la arquitectura moderna de Angular con componentes *standalone*:
-- **Módulo de Autenticación (`auth/`)**:
-  - **`login/`**: Componente de inicio de sesión reactivo con validación de formularios.
-  - **`services/auth.service.ts`**: Servicio centralizado de sesión, gestión de tokens en almacenamiento local y comunicación con la API.
-  - **`guards/auth.guard.ts`**: Protección de rutas privadas y diferenciación por roles (Admin/User).
-  - **`interceptors/jwt.interceptor.ts`**: Interceptor HTTP que inyecta automáticamente el token de autorización en las cabeceras de las solicitudes salientes.
-- **Gestión de Recursos Visuales (Assets)**:
-  - El diseño visual del login incluye soporte para logotipo (`logo-kmanager.png`) e imagen de fondo corporativa (`hero-kmanager.jpg`).
-  - *Mecanismo de Respaldo (Fallback)*: Si los archivos físicos no están presentes en `public/assets/`, la aplicación opera de forma fluida mostrando tipografía corporativa y un degradado estilizado, evitando dependencias externas frágiles o enlaces temporales.
+<p align="center">
+  <img src="https://img.shields.io/badge/Angular-19.0-DD0031?style=for-the-badge&logo=angular&logoColor=white" alt="Angular 19">
+  <img src="https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express-4.x-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/pnpm-9.x-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm">
+</p>
 
 ---
 
-## 2. Estructura del Proyecto
+## 📌 Tabla de Contenidos
+
+1. [Descripción General](#-descripción-general)
+2. [Arquitectura del Sistema](#-arquitectura-del-sistema)
+3. [Módulos y Capacidades](#-módulos-y-capacidades)
+4. [Esquema de Base de Datos (PostgreSQL)](#-esquema-de-base-de-datos-postgresql)
+5. [Endpoints de la API REST](#-endpoints-de-la-api-rest)
+6. [Estructura del Repositorio](#-estructura-del-repositorio)
+7. [Guía de Instalación y Puesta en Marcha](#-guía-de-instalación-y-puesta-en-marcha)
+8. [Credenciales por Defecto (Auto-Seeding)](#-credenciales-por-defecto-auto-seeding)
+9. [Seguridad y Mejores Prácticas](#-seguridad-y-mejores-prácticas)
+
+---
+
+## 📖 Descripción General
+
+**K-Manager** es una solución web empresarial diseñada para la monitorización de flujos de capital, balances financieros, presupuestos y categorización de transacciones. Está construida bajo estándares de **Clean Architecture** (Arquitectura Limpia) y separación de responsabilidades, garantizando alta escalabilidad, seguridad basada en tokens y una experiencia de usuario reactiva mediante **Angular Signals**.
+
+### ✨ Aspectos Clave
+- **Autenticación Robusta**: Cifrado con Bcrypt y tokens JWT (Access Token + Refresh Token).
+- **Persistencia Relacional**: Pool de conexiones PostgreSQL (`pg`) con auto-creación de tablas y datos semilla (*seeding*).
+- **Reactividad con Signals**: Estado local ultra-rápido en el frontend sin sobrecarga de ciclos de detección tradicionales.
+- **Gráficos SVG Dinámicos**: Curvas de tendencia de ingresos calculadas matemáticamente con soporte para diferentes periodos (6 meses / 1 año).
+- **Sincronización CRUD en Tiempo Real**: Creación, lectura, actualización y eliminación de transacciones con reflejo instantáneo en los balances.
+- **Feedback Visual Avanzado**: Notificaciones Toast enriquecidas con temporizador de progreso visual.
+
+---
+
+## 🏛 Arquitectura del Sistema
+
+El proyecto opera bajo un modelo desacoplado cliente-servidor:
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│                 FRONTEND (Angular 19)                   │
+│  - Standalone Components   - Signals & Computed State   │
+│  - HTTP Interceptors (JWT) - Dynamic Math SVG Charts    │
+└────────────────────────────┬────────────────────────────┘
+                             │ HTTP / JSON (REST API)
+                             ▼
+┌─────────────────────────────────────────────────────────┐
+│               BACKEND (Node.js & Express)               │
+│  - Routes & Middlewares    - Controllers (HTTP Handlers)│
+│  - Services (Domain Logic) - Repositories (Data Access) │
+└────────────────────────────┬────────────────────────────┘
+                             │ SQL Queries (pg Pool)
+                             ▼
+┌─────────────────────────────────────────────────────────┐
+│                DATABASE (PostgreSQL 15+)                │
+│  - users        - categories     - transactions         │
+│  - saving_goals - quick_expenses                        │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Módulos y Capacidades
+
+### 1. 🔐 Autenticación & Control de Acceso (RBAC)
+- Login con validación asíncrona de credenciales contra PostgreSQL.
+- Verificación automática de expiración de sesión en background.
+- Guardias de navegación (`auth.guard.ts`) que impiden acceso a rutas protegidas sin credenciales activas.
+- Interceptor HTTP que inyecta automáticamente cabeceras `Authorization: Bearer <token>`.
+
+### 2. 📊 Dashboard Principal
+- **Métricas Clave**: Total de Ingresos, Total de Egresos, Ahorro Mensual acumulado y porcentaje de meta alcanzada.
+- **Accesos Rápidos (Egresos Fijos)**: Configuración y disparo en un clic de pagos recurrentes (Luz, Agua, Hogar, Internet, Tarjetas).
+- **Historial Global**: Visualización de las últimas transacciones con badge de estado (`Completado`, `Pendiente`, `Cancelado`).
+
+### 3. 📈 Módulo de Ingresos
+- **Resumen Financiero**: Balance consolidado de entradas con indicador de tendencia porcentual.
+- **Curva de Tendencia SVG**: Gráfico interactivo con degradados esmeralda, resplandor neón (*glow effect*) y ajuste automático a 6 meses o 1 año.
+- **Gestión Completa (CRUD)**:
+  - ➕ **Nueva Operación**: Registro con vinculación automática a categorías de PostgreSQL.
+  - ✏️ **Editar**: Precarga de datos en modal para actualización instantánea vía `PATCH`.
+  - 🗑️ **Eliminar**: Modal de confirmación antes de la eliminación física vía `DELETE`.
+- **Notificaciones Toast**: Alertas con estados `success`, `error` o `info` acompañadas de barra de progreso regresiva.
+
+---
+
+## 🗄 Esquema de Base de Datos (PostgreSQL)
+
+```mermaid
+erDiagram
+    users ||--o{ transactions : "registra"
+    users ||--o{ saving_goals : "establece"
+    users ||--o{ quick_expenses : "configura"
+    categories ||--o{ transactions : "clasifica"
+    categories ||--o{ quick_expenses : "asigna"
+
+    users {
+        int id PK
+        varchar username UK
+        varchar email UK
+        varchar password_hash
+        varchar role
+        timestamp created_at
+    }
+
+    categories {
+        int id PK
+        varchar name
+        varchar type
+        varchar icon
+        varchar color
+        timestamp created_at
+    }
+
+    transactions {
+        int id PK
+        int user_id FK
+        int category_id FK
+        varchar title
+        varchar subtitle
+        numeric amount
+        varchar type
+        varchar status
+        date transaction_date
+        timestamp created_at
+    }
+
+    saving_goals {
+        int id PK
+        int user_id FK
+        numeric target_amount
+        numeric current_amount
+        varchar month_year
+        timestamp created_at
+    }
+
+    quick_expenses {
+        int id PK
+        int user_id FK
+        int category_id FK
+        varchar title
+        varchar icon
+        varchar color
+        numeric default_amount
+        timestamp created_at
+    }
+```
+
+---
+
+## 📡 Endpoints de la API REST
+
+Todos los endpoints (excepto `/api/auth/login` y `/health`) requieren la cabecera `Authorization: Bearer <token>`.
+
+### 🔑 Autenticación (`/api/auth`)
+| Método | Endpoint | Descripción | Body / Parámetros |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | Autentica usuario y devuelve tokens JWT | `{ username, password }` |
+| `GET` | `/api/auth/me` | Retorna los claims del usuario activo | — |
+
+### 💳 Transacciones & Dashboard (`/api/dashboard`)
+| Método | Endpoint | Descripción | Body / Parámetros |
+|---|---|---|---|
+| `GET` | `/api/dashboard/summary` | Balance general, totales, egresos fijos e historial | — |
+| `GET` | `/api/dashboard/categories` | Catálogo de categorías (ingreso/egreso) | — |
+| `GET` | `/api/dashboard/transactions` | Lista detallada de transacciones del usuario | — |
+| `POST` | `/api/dashboard/transactions` | Crea una nueva transacción (ingreso o egreso) | `{ title, subtitle, amount, type, status, categoryId, transactionDate }` |
+| `PATCH` | `/api/dashboard/transactions/:id` | Actualiza parcialmente una transacción existente | `{ title?, subtitle?, amount?, type?, status?, categoryId?, transactionDate? }` |
+| `DELETE` | `/api/dashboard/transactions/:id` | Elimina permanentemente una transacción | Parámetro `id` en la URL |
+| `GET` | `/api/dashboard/quick-expenses` | Obtiene egresos fijos del usuario | — |
+| `POST` | `/api/dashboard/quick-expenses` | Crea un nuevo acceso rápido / egreso fijo | `{ title, categoryId, icon, color, defaultAmount }` |
+
+---
+
+## 📁 Estructura del Repositorio
 
 ```text
 kmanager/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # Variables de entorno y configuración de BD
-│   │   ├── models/          # Modelos e interfaces de dominio
-│   │   ├── repositories/    # Capa de acceso a datos (Patrón Repositorio)
-│   │   ├── services/        # Lógica de negocio
-│   │   ├── controllers/     # Controladores HTTP
-│   │   ├── middlewares/     # Autenticación y control de roles
-│   │   ├── routes/          # Rutas de la API REST
-│   │   ├── utils/           # Utilidades JWT y criptografía
-│   │   ├── app.ts           # Configuración de Express
-│   │   └── server.ts        # Punto de entrada del servidor
-│   ├── .env.example
+│   │   ├── config/          # Variables de entorno y pool PostgreSQL (database.ts)
+│   │   ├── controllers/     # Controladores HTTP (auth, dashboard)
+│   │   ├── middlewares/     # JWT Auth y validación de roles
+│   │   ├── models/          # Interfaces TypeScript (user, transaction, category)
+│   │   ├── repositories/    # Patrón Repositorio con consultas SQL (pg)
+│   │   ├── routes/          # Enrutadores Express (auth.routes, dashboard.routes)
+│   │   ├── services/        # Reglas de negocio y cálculos de balance
+│   │   ├── utils/           # Firmado y verificación de JWT
+│   │   ├── app.ts           # Configuración de Express, CORS y Middlewares
+│   │   └── server.ts        # Bootstrap y escucha en puerto configurado
+│   ├── .env                 # Variables de entorno locales
 │   ├── package.json
 │   └── tsconfig.json
 │
-└── frontend/
-    └── kmanager-frontend/
-        ├── public/
-        │   └── assets/      # Recursos visuales (logo, hero, favicon)
-        └── src/
-            ├── app/
-            │   ├── admin/   # Vista protegida para administradores
-            │   ├── auth/    # Módulo de autenticación (Login, Guards, Interceptors)
-            │   ├── dashboard/ # Panel principal de usuario autenticado
-            │   ├── app.config.ts  # Configuración global e interceptores
-            │   └── app.routes.ts  # Enrutamiento y protección de accesos
-            └── environments/
-                ├── environment.ts
-                └── environment.prod.ts
+├── frontend/
+│   └── kmanager-frontend/
+│       ├── public/
+│       │   └── assets/      # Recursos gráficos corporativos (logos, favicons)
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── admin/       # Panel para administradores
+│       │   │   ├── auth/        # Login, Guards de ruta, Interceptor HTTP
+│       │   │   ├── dashboard/   # Panel general financiero y egresos fijos
+│       │   │   ├── ingresos/    # Módulo de ingresos, gráfico SVG y CRUD
+│       │   │   ├── app.config.ts# Configuración global e inyección de dependencias
+│       │   │   └── app.routes.ts# Definición de rutas y guardianes
+│       │   ├── environments/    # Configuración de URLs de API por entorno
+│       │   └── styles.css       # Estilos globales y reset
+│       ├── angular.json
+│       ├── package.json
+│       └── tsconfig.json
+│
+├── README.md                # Documentación oficial del proyecto
+└── pnpm-workspace.yaml      # Configuración de workspace monorepo
 ```
 
 ---
 
-## 3. Instalación y Puesta en Marcha
+## ⚙️ Guía de Instalación y Puesta en Marcha
 
-El proyecto utiliza **pnpm** como gestor de paquetes eficiente para entornos monorepo o multitrayecto.
+### Prerrequisitos
+- **Node.js**: v18.0.0 o superior
+- **pnpm**: v9.0.0 o superior (`npm install -g pnpm`)
+- **PostgreSQL**: Instancia local o remota en ejecución
 
-### Requisitos Previos
-- Node.js (versión 18+ recomendada)
-- pnpm (`npm install -g pnpm`)
+---
 
-### A. Backend
+### 1. Configuración del Backend
 
-1. Navegar al directorio del backend:
+1. Entrar en la carpeta del backend:
    ```bash
    cd backend
    ```
@@ -88,76 +246,73 @@ El proyecto utiliza **pnpm** como gestor de paquetes eficiente para entornos mon
    ```bash
    pnpm install
    ```
-3. Configurar las variables de entorno:
-   Copiar `.env.example` a `.env` y configurar `PORT`, `JWT_SECRET` y `JWT_REFRESH_SECRET`:
-   ```bash
-   cp .env.example .env
+3. Configurar el archivo `.env` en `backend/.env`:
+   ```ini
+   PORT=3000
+   NODE_ENV=development
+
+   # Conexión PostgreSQL
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=kmanager
+   DB_USER=postgres
+   DB_PASSWORD=tu_password_postgres
+
+   # Seguridad JWT
+   JWT_SECRET=super_secret_jwt_access_key_kmanager_2026
+   JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_kmanager_2026
    ```
-4. Iniciar el servidor en modo desarrollo (con recarga en caliente mediante `tsx`):
+4. Iniciar el servidor en modo desarrollo:
    ```bash
    pnpm dev
    ```
-   *Para producción:*
-   ```bash
-   pnpm build && pnpm start
-   ```
-   El servidor quedará activo en `http://localhost:3000`.
+   > 💡 **Nota**: Al iniciar, el backend creará automáticamente la base de datos `kmanager`, las tablas y los datos semilla si aún no existen.
 
-### B. Frontend
+---
 
-1. Navegar al directorio del frontend:
+### 2. Configuración del Frontend
+
+1. Abrir otra terminal y navegar al frontend:
    ```bash
    cd frontend/kmanager-frontend
    ```
-2. Instalar dependencias (incluyendo decodificadores JWT):
+2. Instalar dependencias:
    ```bash
    pnpm install
    ```
-3. (Opcional) Colocar los recursos visuales en `public/assets/`:
-   - `logo-kmanager.png`
-   - `hero-kmanager.jpg`
-   *(Si se omiten, la interfaz aplicará automáticamente estilos alternativos por defecto).*
-4. Iniciar el servidor de desarrollo de Angular:
+3. Iniciar el servidor de desarrollo de Angular:
    ```bash
    pnpm start
    ```
-   La aplicación web estará disponible en `http://localhost:4200`.
+4. Abrir en el navegador:
+   ```text
+   http://localhost:4200
+   ```
 
 ---
 
-## 4. Credenciales de Prueba (Mock)
+## 👤 Credenciales por Defecto (Auto-Seeding)
 
-Para pruebas inmediatas del sistema de roles, se encuentran preconfigurados los siguientes usuarios en memoria:
+La base de datos cuenta con dos cuentas iniciales listas para probar:
 
-| Usuario | Contraseña | Rol | Permisos |
-| :--- | :--- | :--- | :--- |
-| `admin` | `Admin123!` | `Admin` | Acceso total al panel de administración y dashboard |
-| `user` | `User123!` | `User` | Acceso estándar al dashboard de usuario |
+| Rol | Usuario | Contraseña | Permisos |
+|---|---|---|---|
+| **Administrador** | `admin` | `Admin123!` | Acceso total a Dashboard, Ingresos y Panel Administrativo |
+| **Usuario Estándar** | `user` | `User123!` | Acceso a Dashboard e Ingresos personales |
 
----
-
-## 5. Endpoints de la API REST
-
-| Método | Ruta | Descripción | Autenticación Requerida |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Autentica credenciales y devuelve tokens JWT y datos de usuario | No |
-| `GET` | `/api/auth/me` | Retorna el perfil y los claims del token actual | Sí (`Bearer Token`) |
-| `GET` | `/health` | Healthcheck del estado del servidor | No |
+*(Las contraseñas distinguen mayúsculas, minúsculas y caracteres especiales).*
 
 ---
 
-## 6. Estrategia de Migración a PostgreSQL (Siguiente Sprint)
+## 🔒 Seguridad y Mejores Prácticas
 
-La arquitectura del backend está diseñada mediante inversión de dependencias para garantizar una transición transparente hacia una base de datos relacional (PostgreSQL):
-
-1. **Configuración de Conexión (`config/database.ts`)**: Activación del pool de conexiones utilizando `pg` o `PrismaClient` con las credenciales definidas en `.env`.
-2. **Repositorio de Producción (`repositories/user.repository.ts`)**: Creación de una clase `PostgresUserRepository implements IUserRepository` que reemplace el almacenamiento en memoria por consultas SQL parametrizadas u ORM.
-3. **Desacoplamiento Total**: Los servicios (`auth.service.ts`), controladores y rutas permanecerán intactos al depender exclusivamente de la interfaz `IUserRepository`.
+1. **Protección contra Inyecciones SQL**: Todas las consultas hacia PostgreSQL utilizan queries parametrizadas con variables `$1, $2, ... $n`.
+2. **Aislamiento Multi-Tenant**: Toda consulta de lectura, actualización o borrado incluye la cláusula estricta `WHERE user_id = $userId` extraída de forma segura del token JWT validado en el backend.
+3. **Cifrado Unidireccional**: Las contraseñas se almacenan mediante el algoritmo `bcryptjs` con 10 rondas de *salt*.
+4. **Validación de Tipos Estricta**: Control tipado de extremo a extremo mediante DTOs en TypeScript tanto en el cliente Angular como en el servidor Express.
 
 ---
 
-## 7. Consideraciones de Seguridad para Producción
-
-- **Claves Secretas**: Asegúrese de utilizar cadenas aleatorias robustas y extensas (32+ bytes) para `JWT_SECRET` y `JWT_REFRESH_SECRET`.
-- **Almacenamiento de Tokens**: Evaluar el almacenamiento de `accessToken` en cookies seguras `httpOnly` en lugar de `localStorage` si se requiere mitigación avanzada contra ataques XSS.
-- **Limitación de Tasa**: Incorporar middlewares como `express-rate-limit` en el endpoint de autenticación para prevenir ataques de fuerza bruta.
+<p align="center">
+  Desarrollado para la gestión financiera eficiente.
+</p>
