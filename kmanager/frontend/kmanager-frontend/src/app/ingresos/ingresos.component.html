@@ -1,0 +1,697 @@
+<div class="k-dashboard-layout">
+
+  <!-- Background Decorative & Animated Layer (Mismo fondo visual que Dashboard y Login) -->
+  <div class="k-bg-grid"></div>
+  <div class="k-bg-beam"></div>
+  
+  <div class="k-orb k-orb-1"></div>
+  <div class="k-orb k-orb-2"></div>
+  <div class="k-orb k-orb-3"></div>
+
+  <!-- Lava Lamp Floating Bubbles -->
+  <div class="k-lava-container">
+    <div class="k-lava-bubble k-bubble-1"></div>
+    <div class="k-lava-bubble k-bubble-2"></div>
+    <div class="k-lava-bubble k-bubble-3"></div>
+    <div class="k-lava-bubble k-bubble-4"></div>
+    <div class="k-lava-bubble k-bubble-5"></div>
+    <div class="k-lava-bubble k-bubble-6"></div>
+    <div class="k-lava-bubble k-bubble-7"></div>
+  </div>
+
+  <div class="k-bg-ring k-ring-1"></div>
+  <div class="k-bg-ring k-ring-2"></div>
+
+  <!-- Mobile Header -->
+  <header class="k-mobile-header">
+    <div class="k-mobile-brand">
+      <div class="k-logo-badge">
+        <img
+          alt="K-Manager Logo"
+          class="k-logo-img"
+          src="/assets/logo-kmanager.png"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'">
+        <span style="display:none; color:#0f172a; font-weight:800; font-size:12px;">K-Manager</span>
+      </div>
+      <span style="font-weight:700; font-size:14px; color:#ffffff;">K-Manager</span>
+    </div>
+
+    <button
+      type="button"
+      (click)="toggleMobileMenu()"
+      class="k-mobile-menu-btn"
+      aria-label="Abrir menú">
+      <span class="material-symbols-outlined">{{ mobileMenuOpen() ? 'close' : 'menu' }}</span>
+    </button>
+  </header>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div
+    *ngIf="mobileMenuOpen()"
+    (click)="closeMobileMenu()"
+    style="position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:45;">
+  </div>
+
+  <!-- Sidebar (Idéntico al existente con 'Ingresos' activo) -->
+  <nav class="k-sidebar" [class.k-sidebar-open]="mobileMenuOpen()">
+    
+    <!-- Brand Logo -->
+    <div class="k-sidebar-header">
+      <img
+        src="/assets/logo-kmanager.png"
+        alt="K-Manager — Control de Gastos"
+        class="k-sidebar-logo-full"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+      >
+      <!-- Fallback si no carga la imagen -->
+      <div class="k-sidebar-logo-fallback-text" style="display:none;">
+        <div class="k-sidebar-logo-icon">K</div>
+        <div>
+          <span class="k-sidebar-brand-name">K-Manager</span>
+          <span class="k-sidebar-brand-tagline">Control de Gastos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="k-sidebar-nav">
+      <!-- Dashboard -->
+      <a [routerLink]="['/dashboard']" class="k-nav-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- Ingresos (Activo) -->
+      <a [routerLink]="['/ingresos']" class="k-nav-item k-nav-active">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+        <span>Ingresos</span>
+      </a>
+
+      <!-- Egresos -->
+      <a (click)="onFeatureClick('Egresos')" class="k-nav-item">
+        <span class="material-symbols-outlined">shopping_cart</span>
+        <span>Egresos</span>
+      </a>
+
+      <!-- Historial -->
+      <a (click)="onFeatureClick('Historial')" class="k-nav-item">
+        <span class="material-symbols-outlined">history</span>
+        <span>Historial</span>
+      </a>
+    </div>
+
+    <!-- CTA & Logout -->
+    <div class="k-sidebar-footer">
+      <button
+        type="button"
+        (click)="openNewOperationModal('income')"
+        class="k-btn-new-op">
+        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+        Nueva Operación
+      </button>
+
+      <button
+        type="button"
+        (click)="onLogout()"
+        class="k-btn-logout">
+        <span class="material-symbols-outlined" style="font-size:18px;">logout</span>
+        Cerrar Sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Workspace -->
+  <main class="k-workspace">
+    
+    <!-- Top Header -->
+    <header class="k-workspace-header">
+      <div>
+        <h1 class="k-header-title">Resumen de Ingresos</h1>
+        <p class="k-header-subtitle">Monitorea y gestiona sus flujos de entrada.</p>
+      </div>
+
+      <!-- Quick Actions & User Profile -->
+      <div class="k-header-actions">
+        <button
+          type="button"
+          (click)="openNewOperationModal('income')"
+          class="k-btn-top-action">
+          <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+          <span>Nueva Operación</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="showToast('No tienes nuevas notificaciones.')"
+          class="k-icon-btn-round"
+          title="Notificaciones">
+          <span class="material-symbols-outlined" style="font-size:20px;">notifications</span>
+        </button>
+
+        <div class="k-user-badge">
+          <div class="k-user-avatar">
+            {{ (user()?.username ?? 'U')[0].toUpperCase() }}
+          </div>
+          <div>
+            <p style="font-size:11px; color:#94a3b8; margin:0;">Usuario activo</p>
+            <p style="font-size:13px; font-weight:700; color:#ffffff; margin:0; text-transform:capitalize;">{{ user()?.username ?? 'Usuario' }}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Bento Grid Layout de Ingresos -->
+    <div class="k-grid">
+      
+      <!-- Total Ingresos Mensuales Card -->
+      <section class="k-col-4 k-glass-panel k-income-summary-card">
+        <div class="k-income-summary-top">
+          <div class="k-summary-label-row">
+            <span class="k-panel-title">Total Ingresos Mensuales</span>
+            <div class="k-trend-icon-badge">
+              <span class="material-symbols-outlined" style="font-size:18px;">trending_up</span>
+            </div>
+          </div>
+          <h2 class="k-income-hero-amount">{{ totalIngresos() }}</h2>
+          <div class="k-trend-indicator">
+            <span class="k-trend-positive">
+              <span class="material-symbols-outlined" style="font-size:16px;">arrow_upward</span>
+              {{ ingresosTrend() }}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="openNewOperationModal('income')"
+          class="k-btn-add-income">
+          <span class="material-symbols-outlined" style="font-size:18px;">add_circle</span>
+          <span>Añadir Ingreso</span>
+        </button>
+      </section>
+
+      <!-- Tendencia de Ingresos Chart Card -->
+      <section class="k-col-8 k-glass-panel k-chart-panel">
+        <div class="k-chart-header">
+          <div>
+            <h3 class="k-section-title">Tendencia de Ingresos</h3>
+            <p *ngIf="!hasIncomes()" style="font-size:11px; color:#64748b; margin:0.25rem 0 0 0;">Sin transacciones registradas (Línea base)</p>
+            <p *ngIf="hasIncomes()" style="font-size:11px; color:#10b981; margin:0.25rem 0 0 0;">Crecimiento progresivo registrado</p>
+          </div>
+          <div class="k-select-wrap">
+            <select
+              [value]="selectedPeriod()"
+              (change)="onPeriodChange($event)"
+              class="k-period-select">
+              <option value="6m">Últimos 6 Meses</option>
+              <option value="1y">Último Año</option>
+            </select>
+            <span class="material-symbols-outlined k-select-chevron">expand_more</span>
+          </div>
+        </div>
+
+        <!-- SVG Line/Area Chart Dinámico -->
+        <div class="k-svg-chart-container">
+          <svg class="k-svg-chart" viewBox="0 0 100 40" preserveAspectRatio="none">
+            <!-- Grid Lines -->
+            <line stroke="rgba(255,255,255,0.06)" stroke-width="0.5" x1="0" x2="100" y1="10" y2="10"></line>
+            <line stroke="rgba(255,255,255,0.06)" stroke-width="0.5" x1="0" x2="100" y1="20" y2="20"></line>
+            <line stroke="rgba(255,255,255,0.06)" stroke-width="0.5" x1="0" x2="100" y1="30" y2="30"></line>
+
+            <!-- Gradient Definition -->
+            <defs>
+              <linearGradient id="chartEmeraldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#10b981" [attr.stop-opacity]="hasIncomes() ? 0.32 : 0.05"></stop>
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"></stop>
+              </linearGradient>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#10b981" [attr.flood-opacity]="hasIncomes() ? 0.6 : 0.2"/>
+              </filter>
+            </defs>
+
+            <!-- Area Fill -->
+            <path
+              [attr.d]="chartAreaPath()"
+              fill="url(#chartEmeraldGrad)">
+            </path>
+
+            <!-- Trend Curve -->
+            <path
+              [attr.d]="chartLinePath()"
+              fill="none"
+              stroke="#10b981"
+              stroke-width="1.6"
+              filter="url(#glow)"
+              vector-effect="non-scaling-stroke">
+            </path>
+
+            <!-- Glowing Data Points -->
+            <circle
+              *ngFor="let pt of chartPoints()"
+              [attr.cx]="pt.x"
+              [attr.cy]="pt.y"
+              [attr.r]="hasIncomes() ? 1.5 : 1"
+              fill="#091426"
+              stroke="#10b981"
+              stroke-width="1.2"
+              vector-effect="non-scaling-stroke">
+            </circle>
+          </svg>
+        </div>
+
+        <!-- Month Labels Axis -->
+        <div class="k-chart-months-axis">
+          <span *ngFor="let label of chartMonthLabels()">{{ label }}</span>
+        </div>
+      </section>
+
+      <!-- Fuentes de Ingreso Recientes Table -->
+      <section class="k-col-12 k-glass-panel k-history-panel">
+        <div class="k-history-header">
+          <h3 class="k-section-title">Fuentes de Ingreso Recientes</h3>
+          <span style="font-size:12px; color:#94a3b8;">{{ incomeTransactions().length }} registros encontrados</span>
+        </div>
+
+        <div class="k-table-container">
+          <table class="k-table">
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Fecha</th>
+                <th style="text-align:right;">Monto</th>
+                <th style="text-align:center; width:100px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of incomeTransactions()">
+                <td>
+                  <div class="k-category-cell">
+                    <div class="k-category-icon-box" [ngClass]="item.iconBg">
+                      <span class="material-symbols-outlined" style="font-size:18px;">{{ item.icon }}</span>
+                    </div>
+                    <div>
+                      <p class="k-table-title">{{ item.title }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="k-table-subtitle" style="font-size:13px; color:#cbd5e1;">
+                  {{ item.subtitle }}
+                </td>
+
+                <td class="k-table-date">{{ item.date }}</td>
+
+                <td style="text-align:right;">
+                  <span class="k-table-amount k-amount-positive">
+                    {{ formatIncomeAmount(item.amount) }}
+                  </span>
+                </td>
+
+                <td style="text-align:center;">
+                  <div class="k-table-actions">
+                    <button
+                      type="button"
+                      (click)="openEditModal(item)"
+                      class="k-btn-action k-btn-action--edit"
+                      title="Editar transacción">
+                      <span class="material-symbols-outlined" style="font-size:17px;">edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="openDeleteConfirm(item)"
+                      class="k-btn-action k-btn-action--delete"
+                      title="Eliminar transacción">
+                      <span class="material-symbols-outlined" style="font-size:17px;">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="incomeTransactions().length === 0">
+                <td colspan="5" style="text-align:center; padding:2.5rem 1.5rem; color:#94a3b8;">
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+                    <div style="width:44px; height:44px; border-radius:50%; background:rgba(16,185,129,0.12); color:#10b981; display:flex; align-items:center; justify-content:center;">
+                      <span class="material-symbols-outlined" style="font-size:22px;">payments</span>
+                    </div>
+                    <p style="font-size:13px; font-weight:500; color:#94a3b8; margin:0;">No hay ingresos registrados en PostgreSQL todavía.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="k-table-footer">
+          <button type="button" (click)="onFeatureClick('Historial')" class="k-btn-link">
+            <span>Ver todo el historial de ingresos</span>
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_forward</span>
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Nueva Operación (Exactamente el mismo formulario del Dashboard conectado a PostgreSQL) -->
+  <div *ngIf="showNewOperationModal()" class="k-modal-backdrop">
+    <div class="k-modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; align-items:center; gap:0.5rem; color:#10b981;">
+          <span class="material-symbols-outlined">add_circle</span>
+          <h3 style="font-size:1.125rem; font-weight:700; color:#ffffff; margin:0;">Nueva Operación</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closeNewOperationModal()"
+          style="background:none; border:none; color:#94a3b8; cursor:pointer;">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveOperation()">
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem;">
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.5rem;">Tipo de Transacción</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <button
+                type="button"
+                (click)="setOpType('income')"
+                [style.border-color]="opType() === 'income' ? '#10b981' : 'rgba(255,255,255,0.1)'"
+                [style.background]="opType() === 'income' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="opType() === 'income' ? '#10b981' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">payments</span>
+                Ingreso
+              </button>
+              <button
+                type="button"
+                (click)="setOpType('expense')"
+                [style.border-color]="opType() === 'expense' ? '#f43f5e' : 'rgba(255,255,255,0.1)'"
+                [style.background]="opType() === 'expense' ? 'rgba(244,63,94,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="opType() === 'expense' ? '#fb7185' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">shopping_cart</span>
+                Egreso
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Descripción *</label>
+            <input
+              type="text"
+              name="opTitle"
+              [ngModel]="opTitle()"
+              (ngModelChange)="opTitle.set($event)"
+              placeholder="Ej: Nómina quincenal, Freelance, Dividendos..."
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Categoría en PostgreSQL</label>
+            <select
+              name="opCategoryId"
+              [ngModel]="opCategoryId()"
+              (ngModelChange)="onCategorySelected($event)"
+              style="width:100%; background:#132238; border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; cursor:pointer;">
+              <option [ngValue]="null" style="background:#0f172a; color:#94a3b8;">-- Seleccionar Categoría --</option>
+              <option *ngFor="let cat of filteredCategories" [ngValue]="cat.id" style="background:#0f172a; color:#ffffff;">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Subtítulo / Detalle (Opcional)</label>
+            <input
+              type="text"
+              name="opSubtitle"
+              [ngModel]="opSubtitle()"
+              (ngModelChange)="opSubtitle.set($event)"
+              placeholder="Ej: Sueldo, Freelance, Inversiones..."
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Monto (GTQ) *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="opAmount"
+              [ngModel]="opAmount()"
+              (ngModelChange)="opAmount.set($event)"
+              placeholder="0.00"
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Fecha de la Operación</label>
+            <input
+              type="date"
+              name="opDate"
+              [ngModel]="opDate()"
+              (ngModelChange)="opDate.set($event)"
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; color-scheme:dark;" />
+          </div>
+
+          <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); padding:0.75rem; border-radius:0.6rem; font-size:12px; color:#10b981; display:flex; align-items:center; gap:0.5rem;">
+            <span class="material-symbols-outlined" style="font-size:18px;">database</span>
+            <span>Esta operación se vinculará con category_id en PostgreSQL.</span>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+          <button
+            type="button"
+            (click)="closeNewOperationModal()"
+            style="padding:0.5rem 1rem; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer;">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmitting()"
+            style="padding:0.5rem 1.25rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#006c49,#10b981); color:#ffffff; font-weight:700; font-size:13px; cursor:pointer;">
+            {{ isSubmitting() ? 'Guardando...' : 'Guardar Operación' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Editar Operación (Conectado a PostgreSQL) -->
+  <div *ngIf="showEditModal()" class="k-modal-backdrop">
+    <div class="k-modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; align-items:center; gap:0.5rem; color:#38bdf8;">
+          <span class="material-symbols-outlined">edit_note</span>
+          <h3 style="font-size:1.125rem; font-weight:700; color:#ffffff; margin:0;">Editar Operación</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closeEditModal()"
+          style="background:none; border:none; color:#94a3b8; cursor:pointer;">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveEditOperation()">
+        <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem;">
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.5rem;">Tipo de Transacción</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <button
+                type="button"
+                (click)="setEditOpType('income')"
+                [style.border-color]="editType() === 'income' ? '#10b981' : 'rgba(255,255,255,0.1)'"
+                [style.background]="editType() === 'income' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="editType() === 'income' ? '#10b981' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">payments</span>
+                Ingreso
+              </button>
+              <button
+                type="button"
+                (click)="setEditOpType('expense')"
+                [style.border-color]="editType() === 'expense' ? '#f43f5e' : 'rgba(255,255,255,0.1)'"
+                [style.background]="editType() === 'expense' ? 'rgba(244,63,94,0.2)' : 'rgba(255,255,255,0.05)'"
+                [style.color]="editType() === 'expense' ? '#fb7185' : '#94a3b8'"
+                style="padding:0.6rem; border-radius:0.6rem; border:1px solid; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:all 0.2s;">
+                <span class="material-symbols-outlined" style="font-size:16px;">shopping_cart</span>
+                Egreso
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Descripción *</label>
+            <input
+              type="text"
+              name="editTitle"
+              [ngModel]="editTitle()"
+              (ngModelChange)="editTitle.set($event)"
+              placeholder="Ej: Nómina quincenal, Freelance..."
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Categoría en PostgreSQL</label>
+            <select
+              name="editCategoryId"
+              [ngModel]="editCategoryId()"
+              (ngModelChange)="onEditCategorySelected($event)"
+              style="width:100%; background:#132238; border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; cursor:pointer;">
+              <option [ngValue]="null" style="background:#0f172a; color:#94a3b8;">-- Seleccionar Categoría --</option>
+              <option *ngFor="let cat of editFilteredCategories" [ngValue]="cat.id" style="background:#0f172a; color:#ffffff;">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Subtítulo / Detalle (Opcional)</label>
+            <input
+              type="text"
+              name="editSubtitle"
+              [ngModel]="editSubtitle()"
+              (ngModelChange)="editSubtitle.set($event)"
+              placeholder="Ej: Sueldo, Freelance, Inversiones..."
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Monto (GTQ) *</label>
+            <input
+              type="number"
+              step="0.01"
+              name="editAmount"
+              [ngModel]="editAmount()"
+              (ngModelChange)="editAmount.set($event)"
+              placeholder="0.00"
+              required
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none;" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Estado</label>
+            <select
+              name="editStatus"
+              [ngModel]="editStatus()"
+              (ngModelChange)="editStatus.set($event)"
+              style="width:100%; background:#132238; border:1px solid rgba(255,255,255,0.12); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; cursor:pointer;">
+              <option value="Completado" style="background:#0f172a; color:#ffffff;">Completado</option>
+              <option value="Pendiente" style="background:#0f172a; color:#ffffff;">Pendiente</option>
+              <option value="Cancelado" style="background:#0f172a; color:#ffffff;">Cancelado</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:0.35rem;">Fecha de la Operación</label>
+            <input
+              type="date"
+              name="editDate"
+              [ngModel]="editDate()"
+              (ngModelChange)="editDate.set($event)"
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:0.6rem; padding:0.65rem 0.85rem; color:#ffffff; font-size:13px; outline:none; color-scheme:dark;" />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+          <button
+            type="button"
+            (click)="closeEditModal()"
+            style="padding:0.5rem 1rem; border:none; background:none; color:#94a3b8; font-size:13px; cursor:pointer;">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isEditSubmitting()"
+            style="padding:0.5rem 1.25rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#0284c7,#0ea5e9); color:#ffffff; font-weight:700; font-size:13px; cursor:pointer;">
+            {{ isEditSubmitting() ? 'Guardando cambios...' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmación de Eliminación -->
+  <div *ngIf="showDeleteConfirmModal()" class="k-modal-backdrop">
+    <div class="k-modal-box" style="max-width:420px; text-align:center;">
+      <div style="width:52px; height:52px; border-radius:50%; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem auto;">
+        <span class="material-symbols-outlined" style="font-size:28px;">delete_forever</span>
+      </div>
+      <h3 style="font-size:1.2rem; font-weight:800; color:#ffffff; margin:0 0 0.5rem 0;">¿Eliminar esta operación?</h3>
+      <p style="font-size:13px; color:#94a3b8; margin:0 0 1.25rem 0; line-height:1.5;">
+        ¿Está seguro de que deseas eliminar <strong style="color:#ffffff;">"{{ deletingItem()?.title }}"</strong> por <strong style="color:#10b981;">{{ deletingItem()?.amount }}</strong>?<br>Esta acción eliminará el registro de PostgreSQL permanentemente.
+      </p>
+
+      <div style="display:flex; gap:0.75rem; justify-content:center;">
+        <button
+          type="button"
+          (click)="closeDeleteConfirm()"
+          [disabled]="isDeleting()"
+          style="flex:1; padding:0.65rem 1rem; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:#cbd5e1; border-radius:0.6rem; font-size:13px; font-weight:600; cursor:pointer;">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          [disabled]="isDeleting()"
+          style="flex:1; padding:0.65rem 1rem; border:none; background:linear-gradient(135deg,#b91c1c,#ef4444); color:#ffffff; border-radius:0.6rem; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(239,68,68,0.4);">
+          {{ isDeleting() ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Alert (éxito / error / info) -->
+  <div *ngIf="toastMessage()"
+    class="k-toast"
+    [class.k-toast--success]="toastType() === 'success'"
+    [class.k-toast--error]="toastType() === 'error'"
+    [class.k-toast--info]="toastType() === 'info'">
+
+    <!-- Ícono principal -->
+    <div class="k-toast-icon">
+      <span class="material-symbols-outlined" style="font-size:22px;">
+        {{ toastType() === 'success' ? 'check_circle' : toastType() === 'error' ? 'error' : 'info' }}
+      </span>
+    </div>
+
+    <!-- Contenido -->
+    <div class="k-toast-body">
+      <p class="k-toast-title">
+        {{ toastType() === 'success' ? '¡Guardado con éxito!' : toastType() === 'error' ? 'Ocurrió un error' : 'Aviso' }}
+      </p>
+      <p class="k-toast-message">{{ toastMessage() }}</p>
+    </div>
+
+    <!-- Botón cerrar -->
+    <button type="button" class="k-toast-close" (click)="toastMessage.set(null)" aria-label="Cerrar">
+      <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+    </button>
+
+    <!-- Barra de progreso animada -->
+    <div class="k-toast-progress"></div>
+  </div>
+
+  <!-- Session Expired Modal Overlay -->
+  <div *ngIf="sessionExpired()" class="k-modal-backdrop">
+    <div class="k-modal-box" style="text-align:center; max-width:380px;">
+      <div style="width:54px; height:54px; border-radius:50%; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem auto;">
+        <span class="material-symbols-outlined" style="font-size:28px;">warning</span>
+      </div>
+      <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin:0 0 0.5rem 0;">Sesión Expirada</h3>
+      <p style="font-size:13px; color:#94a3b8; margin:0 0 1.5rem 0;">Su token de sesión ha expirado. Inicia sesión nuevamente para continuar.</p>
+      <button
+        type="button"
+        (click)="onLogout()"
+        style="width:100%; padding:0.75rem; border:none; border-radius:0.6rem; background:linear-gradient(135deg,#006c49,#10b981); color:#ffffff; font-weight:700; font-size:14px; cursor:pointer;">
+        Iniciar Sesión
+      </button>
+    </div>
+  </div>
+</div>
